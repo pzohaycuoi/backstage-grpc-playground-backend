@@ -54,3 +54,6 @@ export const grpcPlaygroundPlugin = createBackendPlugin({
 export * from './api';
 export type { CertStore } from './service/CertStore';
 
+// Default export for easier consumption
+export default grpcPlaygroundPlugin;
+
