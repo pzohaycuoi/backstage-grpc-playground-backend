@@ -14,5 +14,43 @@
  * limitations under the License.
  */
 
-export * from './service/router';
-export * from './service/CertStore';
+import { loggerToWinstonLogger } from '@backstage/backend-common';
+import {
+    coreServices,
+    createBackendPlugin,
+} from '@backstage/backend-plugin-api';
+import { createRouter } from './service/router';
+
+/**
+ * The gRPC Playground backend plugin
+ *
+ * @public
+ */
+export const grpcPlaygroundPlugin = createBackendPlugin({
+  pluginId: 'grpc-playground',
+  register(reg) {
+    reg.registerInit({
+      deps: {
+        httpRouter: coreServices.httpRouter,
+        logger: coreServices.logger,
+        config: coreServices.rootConfig,
+        urlReader: coreServices.urlReader,
+        database: coreServices.database,
+      },
+      async init({ httpRouter, logger, config, urlReader, database }) {
+        const winstonLogger = loggerToWinstonLogger(logger);
+        const router = await createRouter({
+          logger: winstonLogger,
+          config,
+          urlReader,
+          database,
+        });
+        httpRouter.use(router);
+      },
+    });
+  },
+});
+
+export * from './api';
+export type { CertStore } from './service/CertStore';
+

@@ -1,62 +1,60 @@
-import { CacheClient, errorHandler, PluginDatabaseManager, UrlReader } from '@backstage/backend-common';
+import { errorHandler, UrlReader } from '@backstage/backend-common';
+import { DatabaseService } from '@backstage/backend-plugin-api';
+import { Config } from '@backstage/config';
+import { ScmIntegrations } from '@backstage/integration';
+import { PlaceholderResolver } from '@backstage/plugin-catalog-backend';
 import express from 'express';
 import Router from 'express-promise-router';
-import { Logger } from 'winston';
+import fs from 'fs';
+import { partial, uniqBy } from 'lodash';
 import multer from 'multer';
 import { v4 as uuid } from 'uuid';
-import fs from 'fs';
-import { PlaceholderResolver } from '@backstage/plugin-catalog-backend';
-import { partial, uniqBy } from 'lodash';
-import { ScmIntegrations } from '@backstage/integration';
+import { Logger } from 'winston';
 
 import {
-  ProtoService,
-  ProtoInfo,
-  GRPCRequest,
-  GRPCEventType,
-  ResponseMetaInformation,
-  PlaceholderFile,
-  FileWithImports,
-  EntitySpec,
-  GRPCTarget,
-  LoadProtoResult,
-  loadProtos,
-  ProtoFile,
-  getProtosFromEntitySpec,
-  ensureDirectoryExistence,
-  textPlaceholderResolver,
-  CustomPlaceholderProcessor,
-  LoadCertResult,
   CertFile,
   Certificate,
+  CustomPlaceholderProcessor,
+  ensureDirectoryExistence,
+  EntitySpec,
+  FileWithImports,
+  getProtosFromEntitySpec,
+  GRPCEventType,
+  GRPCRequest,
+  GRPCTarget,
+  LoadCertResult,
+  LoadProtoResult,
+  loadProtos,
+  PlaceholderFile,
+  ProtoFile,
+  ProtoInfo,
+  ProtoService,
+  ResponseMetaInformation,
+  textPlaceholderResolver,
 } from './../api';
 
+import { GenDocConfig, installDocGenerator, isInstalledProtocGenDoc } from '../api/docGenerator';
+import { CertStore } from './CertStore';
 import {
-  LoadProtoStatus,
-  getProtoInput,
-  sendRequestInput,
-  getProtoUploadPath,
-  validateRequestBody,
   getAbsolutePath,
   getFileNameFromPath,
-  REPO_URL,
-  setLogger,
+  getProtoInput,
+  getProtoUploadPath,
   getRelativePath,
-  resolveRelativePath,
-  LoadCertStatus
+  LoadCertStatus,
+  LoadProtoStatus,
+  REPO_URL,
+  sendRequestInput,
+  setLogger,
+  validateRequestBody
 } from './utils';
-import { GenDocConfig, GenDocConfigWithCache, installDocGenerator, isInstalledProtocGenDoc } from '../api/docGenerator';
-import { JsonValue } from '@backstage/types';
-import { CertStore } from './CertStore';
 
 export interface RouterOptions {
   logger: Logger;
-  reader: UrlReader;
-  config?: JsonValue;
+  urlReader: UrlReader;
+  config?: Config;
   certStore?: CertStore;
-  cacheClient?: CacheClient;
-  database: PluginDatabaseManager;
-  integrations: ScmIntegrations;
+  database: DatabaseService;
 }
 
 const getTime = () => new Date().toLocaleTimeString();
@@ -64,7 +62,7 @@ const getTime = () => new Date().toLocaleTimeString();
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
-  const { logger, reader, certStore, integrations, config, cacheClient } = options;
+  const { logger, urlReader, certStore, config, database } = options;
 
   setLogger(logger);
   logger.info(`Creating router grpc-playground with certStore enabled: ${!!certStore}`);
@@ -76,23 +74,26 @@ export async function createRouter(
     text: textPlaceholderResolver,
   };
 
+  // Create a default ScmIntegrations instance
+  const integrations = config ? ScmIntegrations.fromConfig(config) : new ScmIntegrations({} as any);
+
   const placeholderProcessor = new CustomPlaceholderProcessor({
     resolvers: placeholderResolvers,
-    reader,
+    reader: urlReader,
     integrations,
     logger,
+    
   });
 
-  const genDocConfig = (config as any)?.document as GenDocConfig | undefined;
+  const genDocConfig = config?.getOptional('grpcPlayground.document') as GenDocConfig | undefined;
 
   if (genDocConfig) {
     const { protocGenDoc, useCache } = genDocConfig;
     const { install, version } = protocGenDoc || {}
 
     if (install && version) {
-      if (useCache?.enabled) {
-        (genDocConfig as GenDocConfigWithCache).cacheClient = cacheClient;
-      }
+      // Note: cacheClient functionality removed in new backend system
+      // You can add caching logic back if needed using a custom solution
 
       if (!isInstalledProtocGenDoc()) {
         try {
@@ -359,7 +360,7 @@ export async function createRouter(
 
     const upload = multer({ storage });
 
-    upload.array('files[]', 10)(req, res, async () => {
+    (upload.array('files[]', 10) as any)(req, res, async () => {
       if (req.files?.length) {
         let filesWithImports: FileWithImports[] = [];
 
@@ -464,7 +465,7 @@ export async function createRouter(
 
     const upload = multer({ storage });
 
-    upload.array('files[]', 10)(req, res, async () => {
+    (upload.array('files[]', 10) as any)(req, res, async () => {
       if (req.files?.length) {
         const files = req.files as Express.Multer.File[];
         const returnFiles: CertFile[] = [];

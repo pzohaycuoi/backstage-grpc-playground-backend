@@ -1,10 +1,10 @@
-import { resolve as resolvePath } from 'path';
-import { Knex } from 'knex';
-import { v4 as uuid } from 'uuid';
 import { resolvePackagePath } from '@backstage/backend-common';
+import { Knex } from 'knex';
+import { resolve as resolvePath } from 'path';
+import { v4 as uuid } from 'uuid';
 
-import { CertStore, Encoder } from './types';
 import { DefaultEncoder } from './encrypt';
+import { CertStore, Encoder } from './types';
 
 import { CertFile, Certificate, CertType } from '../../api';
 

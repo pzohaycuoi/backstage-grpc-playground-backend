@@ -1,12 +1,11 @@
 import { execSync } from 'child_process';
-import path from 'path';
 import fs from 'fs';
-import https from 'https';
-import tar from 'tar';
 import { IncomingMessage } from 'http';
-import { CacheClient } from '@backstage/backend-common';
-import { getLogger, REPO_URL } from '../service/utils';
+import https from 'https';
 import os from 'os';
+import path from 'path';
+import tar from 'tar';
+import { getLogger, REPO_URL } from '../service/utils';
 
 export interface GenDocConfig {
   enabled?: boolean;
@@ -21,7 +20,7 @@ export interface GenDocConfig {
 }
 
 export interface GenDocConfigWithCache extends GenDocConfig {
-  cacheClient?: CacheClient;
+  cacheClient?: any; // Cache client removed in new backend system
 }
 
 let isInstalled: boolean = false;
@@ -215,7 +214,7 @@ export async function genDoc(protoPath: string, imports?: string[], genDocConfig
   const protoName = path.basename(protoPath, '.proto');
   const docPath = `${protoName}.md`;
   const docFullPath = path.join(protoDir, docPath);
-  let cacheClient: CacheClient | undefined;
+  let cacheClient: any | undefined;
 
   if (genDocConfig?.useCache?.enabled) {
     cacheClient = (genDocConfig as GenDocConfigWithCache).cacheClient;

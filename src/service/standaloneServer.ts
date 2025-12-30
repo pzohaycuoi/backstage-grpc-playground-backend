@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import { createServiceBuilder, DatabaseManager, loadBackendConfig, UrlReaders } from '@backstage/backend-common';
+import {
+  createServiceBuilder,
+  DatabaseManager,
+  loadBackendConfig,
+  UrlReaders
+} from '@backstage/backend-common';
 import { ScmIntegrations } from '@backstage/integration';
 import { Server } from 'http';
 import { Logger } from 'winston';
@@ -35,7 +40,7 @@ export async function startStandaloneServer(
   const config = await loadBackendConfig({ logger, argv: process.argv });
   const integrations = ScmIntegrations.fromConfig(config);
   const reader = UrlReaders.default({ logger, config });
-  const database = DatabaseManager.fromConfig(config).forPlugin('backstage-grpc-playground-backend');
+  const database = DatabaseManager.fromConfig(config).forPlugin('grpc-playground');
 
   const certStore = await CertStores.fromConfig(config, {
     database,
@@ -43,12 +48,11 @@ export async function startStandaloneServer(
   });
 
   const router = await createRouter({
-    config: config.getOptional('grpcPlayground'),
+    config,
     logger,
-    integrations,
     database,
     certStore,
-    reader
+    urlReader: reader
   });
 
   let service = createServiceBuilder(module)
@@ -58,7 +62,7 @@ export async function startStandaloneServer(
     service = service.enableCors({ origin: 'http://localhost:3000' });
   }
 
-  return await service.start().catch(err => {
+  return await service.start().catch((err: any) => {
     logger.error(err);
     process.exit(1);
   });

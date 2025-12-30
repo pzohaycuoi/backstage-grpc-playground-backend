@@ -1,4 +1,4 @@
-import { PluginDatabaseManager } from "@backstage/backend-common";
+import { DatabaseService } from "@backstage/backend-plugin-api";
 import { Config } from "@backstage/config";
 import { Logger } from "winston";
 import { DatabaseCertStore } from "./DatabaseCertStore";
@@ -7,7 +7,7 @@ import { CertStore } from "./types";
 
 interface Options {
   logger: Logger;
-  database: PluginDatabaseManager;
+  database: DatabaseService;
 }
 
 export class CertStores {
@@ -32,7 +32,7 @@ export class CertStores {
       }
 
       return await DatabaseCertStore.create({
-        database: await database.getClient(),
+        database: await database.getClient() as any,
         secretKey,
         initVector,
       });
