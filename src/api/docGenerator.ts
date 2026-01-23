@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import https from 'https';
-import os from 'os';
 import path from 'path';
 import tar from 'tar';
 import { getLogger, REPO_URL } from '../service/utils';
@@ -48,24 +47,24 @@ const platform = PLATFORM_MAPPING[process.platform];
 
 const binDirPath = path.resolve(process.cwd(), './.bin');
 
-const findProtocInPath = (envPath: string) => {
-  if (typeof envPath !== "string") {
-    return undefined;
-  }
-  const candidates = envPath.split(path.delimiter)
-    .filter(p => !p.endsWith(`node_modules${path.sep}.bin`)) // make sure to exlude ...
-    .filter(p => !p.endsWith(`.npm-global${path.sep}bin`)) // ...
-    .map(p => path.join(p, os.platform() === "win32" ? "protoc.exe" : "protoc")) // we are looking for "protoc"
-    .map(p => p[0] === "~" ? path.join(os.homedir(), p.slice(1)) : p); // try expand "~"
+// const findProtocInPath = (envPath: string) => {
+//   if (typeof envPath !== "string") {
+//     return undefined;
+//   }
+//   const candidates = envPath.split(path.delimiter)
+//     .filter(p => !p.endsWith(`node_modules${path.sep}.bin`)) // make sure to exlude ...
+//     .filter(p => !p.endsWith(`.npm-global${path.sep}bin`)) // ...
+//     .map(p => path.join(p, os.platform() === "win32" ? "protoc.exe" : "protoc")) // we are looking for "protoc"
+//     .map(p => p[0] === "~" ? path.join(os.homedir(), p.slice(1)) : p); // try expand "~"
 
-  for (const c of candidates) {
-    if (fs.existsSync(c)) {
-      return c;
-    }
-  }
+//   for (const c of candidates) {
+//     if (fs.existsSync(c)) {
+//       return c;
+//     }
+//   }
 
-  return undefined;
-};
+//   return undefined;
+// };
 
 export function isInstalledProtocGenDoc() {
   const logger = getLogger();

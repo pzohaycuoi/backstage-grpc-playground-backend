@@ -1,34 +1,34 @@
-import path from 'path';
 import fs from 'fs';
 import { partial, uniqBy } from 'lodash';
+import path from 'path';
 import { Service } from 'protobufjs';
 
+import {
+  getAbsolutePath,
+  getAllPossibleSubPaths,
+  getFileNameFromPath,
+  getLogger,
+  getProtoUploadPath,
+  getRelativePath,
+  LoadProtoStatus,
+  REPO_URL,
+} from '../service/utils';
 import {
   fromFileName,
   mockRequestMethods,
   Proto,
   walkServices,
 } from './bloomrpc-mock';
+import { genDoc, GenDocConfig } from './docGenerator';
+import { NotImplementedError } from './error';
+import { CustomPlaceholderProcessor } from './placeholderProcessor';
+import { ProtoFile, ProtoService } from './protobuf';
 import {
   EntitySpec,
   FileWithImports,
   PlaceholderFile,
   WritableFile,
 } from './types';
-import { ProtoFile, ProtoService } from './protobuf';
-import { CustomPlaceholderProcessor } from './placeholderProcessor';
-import { NotImplementedError } from './error';
-import {
-  getAllPossibleSubPaths,
-  LoadProtoStatus,
-  getRelativePath,
-  getAbsolutePath,
-  getFileNameFromPath,
-  REPO_URL,
-  getLogger,
-  getProtoUploadPath,
-} from '../service/utils';
-import { genDoc, GenDocConfig } from './docGenerator';
 
 export type LoadProtoResult = {
   protos: ProtoFile[];
@@ -210,9 +210,10 @@ export async function loadProtosFromFile(
       protos.push(proto);
     } catch (err) {
       logger.warn('OUTPUT ~ loadProtosFromFile ~ err', err);
-      if (err.errno === -2) {
+      const error = err as NodeJS.ErrnoException;
+      if (error.errno === -2) {
         const missingImports: PlaceholderFile[] = [];
-        const capturedMissing = capturedFromWarning || err.path;
+        const capturedMissing = capturedFromWarning || error.path;
 
         if (capturedMissing) {
           missingImports.push({

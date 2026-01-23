@@ -1,13 +1,15 @@
 /* eslint-disable no-param-reassign */
-import { EventEmitter } from "events";
-import { ProtoInfo } from './protoInfo';
 import {
-  Client, credentials, Metadata, ServiceClientConstructor, ServiceError,
-  ClientUnaryCall, CallOptions,
+  CallOptions,
+  Client,
+  ClientUnaryCall,
+  credentials, Metadata, ServiceClientConstructor, ServiceError,
 } from '@grpc/grpc-js';
+import { EventEmitter } from "events";
 import fs from "fs";
-import { Certificate } from "./types";
 import { getLogger } from "../service/utils";
+import { ProtoInfo } from './protoInfo';
+import { Certificate } from "./types";
 
 interface ServiceClient extends Client {
   [methodName: string]: Function;
@@ -220,9 +222,10 @@ export class GRPCRequest extends EventEmitter {
           );
         } catch (err) {
           logger.error(`Error reading tls certificate: ${err}`);
+          const error = err as NodeJS.ErrnoException
 
           this.emit(GRPCEventType.ERROR, {
-            details: err.message,
+            details: error.message,
           }, {});
 
           this.emit(GRPCEventType.END);
@@ -372,21 +375,23 @@ export class GRPCRequest extends EventEmitter {
 
     try {
       inputs = JSON.parse(data || "{}")
-    } catch (e) {
-      e.message = "Couldn't parse JSON inputs Invalid json";
-      this.emit(GRPCEventType.ERROR, e, {});
+    } catch (err) {
+      const error = err as NodeJS.ErrnoException
+      error.message = "Couldn't parse JSON inputs Invalid json";
+      this.emit(GRPCEventType.ERROR, error, {});
       this.emit(GRPCEventType.END);
-      throw new Error(e);
+      throw new Error(error.message);
     }
 
     if (userMetadata) {
       try {
         metadata = JSON.parse(userMetadata || "{}")
-      } catch (e) {
-        e.message = "Couldn't parse JSON metadata Invalid json";
-        this.emit(GRPCEventType.ERROR, e, {});
+      } catch (err) {
+        const error = err as NodeJS.ErrnoException
+        error.message = "Couldn't parse JSON metadata Invalid json";
+        this.emit(GRPCEventType.ERROR, error, {});
         this.emit(GRPCEventType.END);
-        throw new Error(e);
+        throw new Error(error.message);
       }
     }
 

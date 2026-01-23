@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { loggerToWinstonLogger } from '@backstage/backend-common';
 import {
-    coreServices,
-    createBackendPlugin,
+  coreServices,
+  createBackendPlugin,
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './service/router';
 
@@ -38,9 +37,8 @@ export const grpcPlaygroundPlugin = createBackendPlugin({
         database: coreServices.database,
       },
       async init({ httpRouter, logger, config, urlReader, database }) {
-        const winstonLogger = loggerToWinstonLogger(logger);
         const router = await createRouter({
-          logger: winstonLogger,
+          logger: logger,
           config,
           urlReader,
           database,

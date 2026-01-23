@@ -1,14 +1,24 @@
-import {
-  PlaceholderProcessorOptions,
-  PlaceholderResolverParams,
-} from '@backstage/plugin-catalog-backend';
 import { JsonValue } from '@backstage/types';
-import yaml from 'yaml';
 import fs from 'fs';
 import path from 'path';
-import { EntitySpec, Library, PlaceholderFile, WritableFile } from './types';
+import yaml from 'yaml';
 import { getFileNameFromPath, LIBRARY_BASE_PATH, resolveRelativePath } from '../service/utils';
-import { Logger } from 'winston';
+import { EntitySpec, Library, PlaceholderFile, WritableFile } from './types';
+import PlaceholderResolverParams from '@backstage/backend-plugin-api'
+
+type PlaceholderResolverParams = {
+  key: string;
+  value: JsonValue;
+  baseUrl: string;
+  read: (url: string) => Promise<Buffer>;
+  resolveUrl: (url: string, base: string) => string;
+  emit: (options: unknown) => void;
+};
+
+type ReadTreeFile = {
+  path: string;
+  content: () => Promise<Buffer>;
+};
 
 interface ProcessResult {
   files: WritableFile[];
@@ -31,8 +41,8 @@ function getAllFiles(dir: string, parent?: string) {
   return fileNames;
 }
 export class CustomPlaceholderProcessor {
-  constructor(private readonly options: PlaceholderProcessorOptions & {
-    logger: Logger;
+  constructor(private readonly options: any & {
+    logger: any;
   }) { }
 
   async processEntitySpec(
@@ -81,7 +91,7 @@ export class CustomPlaceholderProcessor {
         const readTreeResult = await this.options.reader.readTree(url);
         const treeFiles = await readTreeResult.files();
 
-        return Promise.all(treeFiles.map(async (file): Promise<WritableFile> => {
+        return Promise.all(treeFiles.map(async (file: ReadTreeFile): Promise<WritableFile> => {
           const content = await file.content();
           const fileName = getFileNameFromPath(file.path);
           const fullPath = path.join(libDir, file.path);

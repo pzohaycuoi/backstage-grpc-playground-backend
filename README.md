@@ -1,84 +1,28 @@
-# backstage-grpc-playground-backend
+# grpc-backend
 
-![GitHub](https://img.shields.io/github/license/zalopay-oss/backstage-grpc-playground-backend) ![Project Level](https://img.shields.io/badge/level-beta-yellowgreen) ![GitHub issues](https://img.shields.io/github/issues/zalopay-oss/backstage-grpc-playground-backend) ![GitHub contributors](https://img.shields.io/github/contributors-anon/zalopay-oss/backstage-grpc-playground-backend?color=blue) ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/zalopay-oss/backstage-grpc-playground-backend)
+This plugin backend was templated using the Backstage CLI. You should replace this text with a description of your plugin backend.
 
-<!-- TOC -->
-- [**Overview**](#overview)
-- [**Install**](#install)
-- [**Usage**](#usage)
-- [**Acknowledgements**](#acknowledgements)
+## Installation
 
-## Overview
+This plugin is installed via the `@internal/backstage-plugin-grpc-backend-backend` package. To install it to your backend package, run the following command:
 
-This repo contains backend code of the [backstage-grpc-playground](https://github.com/zalopay-oss/backstage-grpc-playground.git)
-
-## Install
-
-Install backstage-grpc-playground-backend for `packages/backend`
-
-E.g: In your backstage project root
-
-```zsh
-  yarn --cwd packages/backend add backstage-grpc-playground-backend
+```bash
+# From your root directory
+yarn --cwd packages/backend add @internal/backstage-plugin-grpc-backend-backend
 ```
 
-## Usage
+Then add the plugin to your backend in `packages/backend/src/index.ts`:
 
-#### Register the plugin in backend
-
-Create a new file `packages/backend/src/plugins/grpc-playground.ts`
-
-```typescript
-// packages/backend/src/plugins/grpc-playground.ts
-import { ScmIntegrations } from '@backstage/integration';
-import { createRouter } from 'backstage-grpc-playground-backend';
-
-import { Router } from 'express';
-import { PluginEnvironment } from '../types';
-
-export default async function createPlugin(
-  env: PluginEnvironment,
-): Promise<Router> {
-  const { config, reader } = env;
-
-  const integrations = ScmIntegrations.fromConfig(config);
-
-  return await createRouter({
-    logger: env.logger,
-    reader,
-    integrations,
-    database: env.database,
-  });
-}
+```ts
+const backend = createBackend();
+// ...
+backend.add(import('@internal/backstage-plugin-grpc-backend-backend'));
 ```
 
-#### Register `/grpc-playground` path in backstage backend
+## Development
 
-```typescript
-// packages/backend/src/index.ts
-import grpcPlayground from './plugins/grpc-playground';
+This plugin backend can be started in a standalone mode from directly in this
+package with `yarn start`. It is a limited setup that is most convenient when
+developing the plugin backend itself.
 
-async function main() {
-  // other env
-  const grpcPlaygroundEnv = useHotMemoize(module, () => createEnv('grpc-playground'));
-  
-  // init router
-  // ...
-
-  // register before notFoundHandler  
-  apiRouter.use('/grpc-playground', await grpcPlayground(grpcPlaygroundEnv));
-
-  // not found handler
-  apiRouter.use(notFoundHandler());
-}
-```
-
-## Examples
-
-See [examples](https://github.com/zalopay-oss/backstage-grpc-playground#examples)
-
-## Acknowledgements
-
-- Thanks to [Backstage Team](https://github.com/backstage/backstage) for creating an incredable framework
-- Thanks to the authors of the awesome [BloomRPC Application](https://github.com/bloomrpc/bloomrpc)
-- Feel free to [submit new issues](https://github.com/zalopay-oss/backstage-grpc-playground-backend/issues/new)
+If you want to run the entire project, including the frontend, run `yarn start` from the root directory.

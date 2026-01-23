@@ -1,5 +1,5 @@
-import fs from 'fs';
 import { GrpcObject, loadPackageDefinition } from '@grpc/grpc-js';
+import fs from 'fs';
 import { get, uniq } from 'lodash';
 import path from 'path';
 import {
@@ -9,15 +9,15 @@ import {
   Method,
   Namespace,
   OneOf,
+  Service as ProtoService,
   ReflectionObject,
   Root,
   Service,
-  Service as ProtoService,
   Type,
 } from 'protobufjs';
 
-import { PlaceholderFile } from '../types';
 import { load as grpcDef } from '@grpc/proto-loader';
+import { PlaceholderFile } from '../types';
 
 export interface Proto {
   fileName: string;
@@ -156,17 +156,17 @@ export function serviceByName(root: Root, serviceName: string): ProtoService {
   return root.lookupService(serviceLeaf.fullName);
 }
 
-function promisifyRead(fileName: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(fileName, 'utf8', function (err, result) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
+// function promisifyRead(fileName: string): Promise<string> {
+//   return new Promise((resolve, reject) => {
+//     fs.readFile(fileName, 'utf8', function (err, result) {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(result);
+//       }
+//     });
+//   });
+// }
 
 function addIncludePathToRoot(root: Root, includePaths: string[]) {
   const originalResolvePath = root.resolvePath;

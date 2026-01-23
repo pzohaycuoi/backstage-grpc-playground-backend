@@ -21,6 +21,7 @@ import {
   UrlReaders
 } from '@backstage/backend-common';
 import { ScmIntegrations } from '@backstage/integration';
+
 import { Server } from 'http';
 import { Logger } from 'winston';
 import { CertStores } from './CertStore';
@@ -38,7 +39,8 @@ export async function startStandaloneServer(
   const logger = options.logger.child({ service: 'backstage-grpc-playground-backend' });
   logger.debug('Starting application server...');
   const config = await loadBackendConfig({ logger, argv: process.argv });
-  const integrations = ScmIntegrations.fromConfig(config);
+  // const integrations = ScmIntegrations.fromConfig(config);
+  ScmIntegrations.fromConfig(config);
   const reader = UrlReaders.default({ logger, config });
   const database = DatabaseManager.fromConfig(config).forPlugin('grpc-playground');
 

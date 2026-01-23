@@ -58,7 +58,8 @@ export function mockServiceMethods(
       // Server side streaming
       if (service.methods[method].responseStream) {
         const pushInterval = setInterval(function () {
-          const getMockPayload = mockedMethodsPayloads[method];
+          // const getMockPayload = mockedMethodsPayloads[method];
+          mockedMethodsPayloads[method];
           call.write(message);
         }, 1000);
 

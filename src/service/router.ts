@@ -1,15 +1,12 @@
-import { errorHandler, UrlReader } from '@backstage/backend-common';
-import { DatabaseService } from '@backstage/backend-plugin-api';
+import { DatabaseService, LoggerService, UrlReaderService } from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
 import { ScmIntegrations } from '@backstage/integration';
-import { PlaceholderResolver } from '@backstage/plugin-catalog-backend';
 import express from 'express';
 import Router from 'express-promise-router';
 import fs from 'fs';
 import { partial, uniqBy } from 'lodash';
 import multer from 'multer';
 import { v4 as uuid } from 'uuid';
-import { Logger } from 'winston';
 
 import {
   CertFile,
@@ -50,11 +47,11 @@ import {
 } from './utils';
 
 export interface RouterOptions {
-  logger: Logger;
-  urlReader: UrlReader;
+  logger: LoggerService;
+  urlReader: UrlReaderService;
   config?: Config;
   certStore?: CertStore;
-  database: DatabaseService;
+  database?: DatabaseService;
 }
 
 const getTime = () => new Date().toLocaleTimeString();
@@ -62,15 +59,16 @@ const getTime = () => new Date().toLocaleTimeString();
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
-  const { logger, urlReader, certStore, config, database } = options;
-
-  setLogger(logger);
+  // const { logger, urlReader, certStore, config, database } = options;
+  const { logger, urlReader, certStore, config } = options;
+  
+  setLogger(logger as any);
   logger.info(`Creating router grpc-playground with certStore enabled: ${!!certStore}`);
 
   const router = Router();
   router.use(express.json());
 
-  const placeholderResolvers: Record<string, PlaceholderResolver> = {
+  const placeholderResolvers: Record<string, any> = {
     text: textPlaceholderResolver,
   };
 
@@ -82,13 +80,13 @@ export async function createRouter(
     reader: urlReader,
     integrations,
     logger,
-    
   });
 
   const genDocConfig = config?.getOptional('grpcPlayground.document') as GenDocConfig | undefined;
 
   if (genDocConfig) {
-    const { protocGenDoc, useCache } = genDocConfig;
+    // const { protocGenDoc, useCache } = genDocConfig;
+    const { protocGenDoc } = genDocConfig;
     const { install, version } = protocGenDoc || {}
 
     if (install && version) {
@@ -99,7 +97,8 @@ export async function createRouter(
         try {
           await installDocGenerator(version);
         } catch (err) {
-          logger.error(`Error installing protoc-gen-doc. Please submit a new issue at ${REPO_URL}`, err);
+          const error = err as NodeJS.ErrnoException
+          logger.error(`Error installing protoc-gen-doc. Please submit a new issue at ${REPO_URL}`, error);
         }
       }
     }
@@ -193,7 +192,7 @@ export async function createRouter(
           protoFiles
             .concat(commonImports)
             .concat(
-              protoFiles.reduce((acc: PlaceholderFile[], file) => {
+              protoFiles.reduce((acc: PlaceholderFile[], file: any) => {
                 return acc.concat(file.imports || []);
               }, []),
             )
@@ -389,7 +388,8 @@ export async function createRouter(
                 return;
               }
             } catch (err) {
-              logger.warn('Error setup storage', err);
+              const error = err as NodeJS.ErrnoException
+              logger.warn('Error setup storage', error);
             }
           }
 
@@ -510,7 +510,8 @@ export async function createRouter(
                 };
               }
             } catch (err) {
-              logger.warn('Error setup storage', err);
+              const error = err as NodeJS.ErrnoException
+              logger.warn('Error setup storage', error);
             }
           }
 
@@ -604,7 +605,8 @@ export async function createRouter(
         message = 'Certificate not found';
       }
     } catch (err) {
-      message = err?.message || 'Unknown error';
+      const error = err as NodeJS.ErrnoException;
+      message = error?.message || 'Unknown error';
     }
 
     res.send({
@@ -828,8 +830,6 @@ export async function createRouter(
       grpcRequest.cancel();
     });
   });
-
-  router.use(errorHandler());
   return router;
 }
 

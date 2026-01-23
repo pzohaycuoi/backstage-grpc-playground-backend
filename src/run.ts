@@ -20,7 +20,8 @@ import { startStandaloneServer } from './service/standaloneServer';
 
 const port = process.env.PLUGIN_PORT ? Number(process.env.PLUGIN_PORT) : 7007;
 const enableCors = yn(process.env.PLUGIN_CORS, { default: false });
-const logger = getRootLogger();
+// const logger = WinstonLogger.create({ level: process.env.LOG_LEVEL || 'info' });
+const logger = getRootLogger()
 
 startStandaloneServer({ port, enableCors, logger }).catch(err => {
   logger.error(err);

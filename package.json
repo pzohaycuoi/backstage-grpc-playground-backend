@@ -1,5 +1,5 @@
 {
-  "name": "backstage-grpc-playground-backend",
+  "name": "@internal/backstage-plugin-grpc-backend-backend",
   "version": "0.3.2",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -40,6 +40,7 @@
     "postpack": "backstage-cli package postpack"
   },
   "dependencies": {
+    "@backstage/backend-common": "^0.23.0",
     "@backstage/backend-defaults": "^0.14.0",
     "@backstage/backend-plugin-api": "^1.6.0",
     "@backstage/catalog-model": "^1.4.0",
